@@ -1,0 +1,13 @@
+fastapi
+sqlalchemy
+pydantic
+pydantic-settings
+asyncpg
+fastapi 
+uvicorn 
+httpx 
+python-multipart
+python-dotenv
+psycopg2-binary
+langchain-core
+langchain-openai
