@@ -29,3 +29,7 @@ Luego se construye las imágenes necesarias para levantar la aplicación:
 Finalmente, se levanta la aplicación:
 
     docker compose up
+
+Para consultar la documentación y uso de endpoints se puede consular una vez que la aplicación esté levantada en:
+
+    http://localhost:8000/docs
