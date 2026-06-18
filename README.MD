@@ -32,7 +32,7 @@ Finalmente, se levanta la aplicación:
 
 Todos los endpoints de la API requieren autenticación mediante una API Key. Esta debe enviarse en el header de cada request de la siguiente manera:
 
-    X-API-Key: tu_api_key_aqui
+    API-Key: tu_api_key_aqui
 
 Para consultar la documentación y uso de endpoints se puede consular una vez que la aplicación esté levantada en:
 
