@@ -54,3 +54,5 @@ temp/
 *.jpeg
 *.png
 
+uv.lock
+infra/postgres_data

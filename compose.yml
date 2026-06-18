@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   api:
-    build: ../api
+    build: ./
     container_name: ai_api
     ports:
       - "8000:8000"
@@ -15,7 +13,8 @@ services:
       db:
         condition: service_healthy 
     volumes:
-      - ./uploads:/app/uploads  
+      - ./infra/uploads:/app/uploads
+      - ./api/app:/api/app
 
   db:
     image: postgres:15
@@ -32,8 +31,5 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-
-volumes:
-  postgres_data:
+      - ./infra/postgres_data:/var/lib/postgresql/data
+      - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql

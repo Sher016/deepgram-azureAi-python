@@ -1,10 +1,12 @@
 import base64
 import json
+from pydantic import BaseModel
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
 from app.core.exceptions import ExternalServiceError, handle_external_errors
+from app.schemas.intelligence_document_processing import IdResponseFormat
 from app.services.llm.prompts.system_prompt import SYSTEM_PROMPT   
 from app.services.llm.prompts.user_prompt import USER_PROMPT      
 from app.services.base import DocumentProcessingService
@@ -27,6 +29,8 @@ class AzureIDPService(DocumentProcessingService):
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
         media_type = resolve_content_type(filename, default="image/jpeg")
 
+        structured_llm = self._llm.with_structured_output(IdResponseFormat, include_raw=True)
+
         messages = [
             SystemMessage(content=SYSTEM_PROMPT), 
             HumanMessage(content=[
@@ -41,28 +45,16 @@ class AzureIDPService(DocumentProcessingService):
             ]),
         ]
 
-        response = await self._llm.ainvoke(messages)
-        return self._parse_response(response)
+        response:dict = await structured_llm.ainvoke(messages)
 
-    @staticmethod
-    def _parse_response(response) -> dict:
-        raw_content = response.content or "{}"
-        clean = raw_content.strip()
-        if clean.startswith("```"):
-            clean = clean.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-
-        try:
-            extracted = json.loads(clean)
-        except json.JSONDecodeError:
-            extracted = {"raw": raw_content}
-
-        usage = response.usage_metadata or {}
+        raw_response: AIMessage = response["raw"]
+        model_response = response["parsed"]
+        usage = raw_response.usage_metadata
 
         return {
-            "document_type": extracted.get("document_type", "unknown"),
-            "extracted_data": extracted.get("fields", extracted),
-            "extracted_json": json.dumps(extracted),
-            "azure_model": response.response_metadata.get("model_name", ""),
+            "document_type": "cedula",
+            "extracted_data": model_response.model_dump(),
+            "azure_model": raw_response.response_metadata.get("model_name", ""),
             "prompt_tokens": usage.get("input_tokens", 0),
             "completion_tokens": usage.get("output_tokens", 0),
             "total_tokens": usage.get("total_tokens", 0),

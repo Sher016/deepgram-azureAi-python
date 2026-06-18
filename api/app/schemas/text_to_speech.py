@@ -1,6 +1,9 @@
 from pydantic import BaseModel, Field
- 
- 
+
+
+class TtsResponseId(BaseModel):
+    task_id: str
+
 class TtsRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=2000, description="Text to synthesize")
     voice_model: str = Field(

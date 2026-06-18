@@ -1,13 +1,15 @@
 from pydantic import BaseModel
- 
- 
+
+class SpeechToTextId(BaseModel):
+    task_id: str
+
 class SpeakerSegment(BaseModel):
     speaker: int
     start: float
     end: float
     text: str
- 
- 
+
+
 class SttResponse(BaseModel):
     request_id: str
     transcript: str

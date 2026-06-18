@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import require_api_key
 from app.core.database import get_db
 from app.utils.queue import TaskPayload, enqueue, wait_for_task
-from app.schemas.intelligence_document_processing import IdpResponse, TokenUsage
+from app.schemas.intelligence_document_processing import IdpResponse, TokenUsage, RequestIdResponse
 from app.utils.task_utils import create_task, get_task, build_task_response, check_task_ready, validate_file_extension
 from app.models.task import TaskStatus
 
@@ -14,12 +14,14 @@ ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 router = APIRouter(prefix="/idp", tags=["Intelligent Document Processing"])
 
 
-@router.post("/analyze", response_model=IdpResponse, status_code=status.HTTP_200_OK, summary="Analyze a document image")
+@router.post("/analyze")
 async def analyze_document(
     file: UploadFile = File(...),
     _: str = Depends(require_api_key),
     db: AsyncSession = Depends(get_db),
 ) -> IdpResponse:
+
+    """Endpoint para la extracción de información de cedulas devuelve la información de la cedula más la información de consumo"""
     validate_file_extension(file.filename, ALLOWED_EXTENSIONS)
 
     task_id = await create_task(db, "idp", file.filename)
@@ -55,24 +57,49 @@ async def analyze_document(
     )
 
 
-@router.get("/status/{task_id}", summary="Check IDP task status")
+@router.post("/analyze_better_way")
+async def analyze_document_better_way(
+        file: UploadFile = File(...),
+        _: str = Depends(require_api_key),
+        db: AsyncSession = Depends(get_db),
+) -> RequestIdResponse:
+    """Endpoint para la extracción de información de cedulas devuelve el id de la tarea para su posterior consulta"""
+    validate_file_extension(file.filename, ALLOWED_EXTENSIONS)
+
+    task_id = await create_task(db, "idp", file.filename)
+    image_bytes = await file.read()
+    event = asyncio.Event()
+
+    enqueue(TaskPayload(
+        task_id=task_id,
+        task_type="idp",
+        event=event,
+        data={"image_bytes": image_bytes, "filename": file.filename or "document"},
+    ))
+
+    return RequestIdResponse(task_id=task_id)
+
+
+@router.get("/status/{task_id}")
 async def get_idp_status(
     task_id: str,
     _: str = Depends(require_api_key),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
+    """Endpoint para la consulta de tareas activas del extractor de cedulas"""
     task = await get_task(db, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return build_task_response(task)
 
 
-@router.get("/result/{task_id}", response_model=IdpResponse, summary="Get IDP task result")
+@router.get("/result/{task_id}")
 async def get_idp_result(
     task_id: str,
     _: str = Depends(require_api_key),
     db: AsyncSession = Depends(get_db),
 ) -> IdpResponse:
+    """Endpoint para la consulta de respuestas del extractor de cedulas"""
     task = await get_task(db, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
