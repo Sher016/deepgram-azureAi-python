@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-COPY api/app/ app/
+COPY ./app app/
 
 EXPOSE 8000
 

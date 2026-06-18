@@ -5,7 +5,7 @@ import asyncio
 from unittest.mock import patch
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv("../infra/.env")
 
 os.environ["POSTGRES_HOST"] = "localhost"
 os.environ["POSTGRES_PORT"] = "5434"

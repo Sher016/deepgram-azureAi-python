@@ -8,7 +8,7 @@ from typing import Tuple
 from tqdm.asyncio import tqdm
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv("../infra/.env")
 
 BASE_URL = "http://localhost:8001"
 TOTAL_REQUESTS = 1000
