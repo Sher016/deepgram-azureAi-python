@@ -1,6 +1,8 @@
+name: ai_assessment
+
 services:
   api:
-    build: ./
+    build: ../api
     container_name: ai_api
     ports:
       - "8000:8000"
@@ -13,8 +15,8 @@ services:
       db:
         condition: service_healthy 
     volumes:
-      - ./infra/uploads:/app/uploads
-      - ./api/app:/api/app
+      - ./uploads:/app/uploads
+      - ../api/app:/api/app
 
   db:
     image: postgres:15
@@ -31,5 +33,5 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./infra/postgres_data:/var/lib/postgresql/data
-      - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
